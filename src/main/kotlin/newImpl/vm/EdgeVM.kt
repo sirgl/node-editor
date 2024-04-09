@@ -15,7 +15,6 @@ class EdgeVM(private val edge: Edge, private val graph: Graph) {
         val inputCount = snapshot.getInputCount(node.id)
         val relativeOffset = getOutputOffsetRelativeToNode(inputCount, index, density)
         return offset + relativeOffset
-//            return Offset(offset.x + 135.dp.toPx(), offset.y + 76.dp.toPx() + (index * 15).dp.toPx())
     }
 
     fun getEnd(density: Density): Offset {
@@ -23,7 +22,7 @@ class EdgeVM(private val edge: Edge, private val graph: Graph) {
         val offset = node.offset
         val index = graph.current.getInputPortIndex(edge.toNode, edge.toPort)
         with(density) {
-            return Offset(offset.x + 15.dp.toPx(), offset.y + 43.dp.toPx() + (index * 15).dp.toPx())
+            return Offset(offset.x + 15.dp.toPx(), offset.y + 43.dp.toPx() + (index * 16).dp.toPx())
         }
     }
 }

@@ -22,6 +22,7 @@ import newImpl.model.AddNode
 import newImpl.model.Change
 import newImpl.model.Graph
 import newImpl.vm.GraphVM
+import kotlin.math.abs
 
 @OptIn(ExperimentalComposeUiApi::class)
 @Composable
@@ -71,7 +72,7 @@ private fun Edges(vm: GraphVM) {
         if (vm.dragModel.isDragging && startOffset != null) {
             val paint = Paint()
             paint.strokeWidth = 5f
-            paint.color = Color.Red
+            paint.color = Color.Blue
             paint.style = PaintingStyle.Stroke
 
             val path = org.jetbrains.skia.Path()
@@ -95,19 +96,26 @@ private fun Edges(vm: GraphVM) {
         paint.style = PaintingStyle.Stroke
         val path = org.jetbrains.skia.Path()
         for (edgeVM in vm.edges.value) {
-            path.apply {
-                val start = edgeVM.getStart(this@Canvas)
-                val startX = start.x
-                val startY = start.y
-                val end = edgeVM.getEnd(this@Canvas)
-                val endX = end.x
-                val endY = end.y
+            val start = edgeVM.getStart(this@Canvas)
+            val startX = start.x
+            val startY = start.y
+            val end = edgeVM.getEnd(this@Canvas)
+            val endX = end.x
+            val endY = end.y
+
+// Calculate control points for the Bezier curve.
+            val controlPoint1X = startX + (endX - startX) / 3
+            val controlPoint1Y = startY
+            val controlPoint2X = startX + 2 * (endX - startX) / 3
+            val controlPoint2Y = endY
+
+            val path = Path().apply {
                 moveTo(startX, startY)
-                lineTo(endX, endY)
+                cubicTo(controlPoint1X, controlPoint1Y, controlPoint2X, controlPoint2Y, endX, endY)
             }
 
             drawIntoCanvas { canvas ->
-                canvas.nativeCanvas.drawPath(path, paint.asFrameworkPaint())
+                canvas.nativeCanvas.drawPath(path.asSkiaPath(), paint.asFrameworkPaint())
             }
             // TODO draw edge
 
