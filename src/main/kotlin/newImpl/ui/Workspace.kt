@@ -43,7 +43,12 @@ fun Workspace(vm: GraphVM, applyChanges: (changes: List<Change>) -> Unit) {
                         label = "Create new node",
                         onClick = {
                             val nodeName = vm.graph.current.suggestNewNodeName("Node")
-                            applyChanges(listOf(AddNode(nodeName, vm.cursorPosition.value, listOf("Input 1", "Input 2", "Input 3", "Input 4"), listOf("Output 1", "Output 2", "Output 3"))))
+                            applyChanges(listOf(AddNode(
+                                name = nodeName,
+                                position = vm.cursorPosition.value,
+                                inputPorts = listOf("Input 1"),
+                                outputPorts = listOf("Output 1", "Output 2", "Output 3")
+                            )))
                         })
                 )
             }) {

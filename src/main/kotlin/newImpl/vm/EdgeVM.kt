@@ -8,12 +8,14 @@ import newImpl.model.Graph
 
 class EdgeVM(private val edge: Edge, private val graph: Graph) {
     fun getStart(density: Density): Offset {
-        val node = graph.current.getNode(edge.fromNode)
+        val snapshot = graph.current
+        val node = snapshot.getNode(edge.fromNode)
         val offset = node.offset
-        val index = graph.current.getOutputPortIndex(edge.fromNode, edge.fromPort)
-        with(density) {
-            return Offset(offset.x + 135.dp.toPx(), offset.y + 76.dp.toPx() + (index * 15).dp.toPx())
-        }
+        val index = snapshot.getOutputPortIndex(edge.fromNode, edge.fromPort)
+        val inputCount = snapshot.getInputCount(node.id)
+        val relativeOffset = getOutputOffsetRelativeToNode(inputCount, index, density)
+        return offset + relativeOffset
+//            return Offset(offset.x + 135.dp.toPx(), offset.y + 76.dp.toPx() + (index * 15).dp.toPx())
     }
 
     fun getEnd(density: Density): Offset {
@@ -26,20 +28,14 @@ class EdgeVM(private val edge: Edge, private val graph: Graph) {
     }
 }
 
-// TODO better to do it in a more stable way
-fun getOutputOffsetRelativeToNode(inputCount: Int, outputIndex: Int) : Offset {
-    when (inputCount) {
-        0 -> {
-            when (outputIndex) {
-                0 -> return Offset(135.dp.value, 25.dp.value)
-            }
-        }
-        1 -> {
+fun getOutputOffsetRelativeToNode(inputCount: Int, outputIndex: Int, density: Density) : Offset {
+    with(density) {
 
-        }
-        2 -> {
+        // Base offset seems to begin from 45 and increments by 16.dp for each inputCount
+        val baseOffset = 45.dp + (inputCount * 16).dp
+        // offset is always 135.dp in x direction
+        val xOffset = 135.dp
 
-        }
+        return Offset(xOffset.toPx(), baseOffset.toPx() + (outputIndex * 16).dp.toPx())
     }
-    TODO()
 }
