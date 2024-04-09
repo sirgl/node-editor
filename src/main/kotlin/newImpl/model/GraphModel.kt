@@ -6,7 +6,7 @@ import java.util.*
 class Graph {
     var current: GraphSnapshot = GraphSnapshot()
     // TODO it would be better if these listeners would be more structured, like in datoms/workspace model
-    private val nodeAddedListener = mutableListOf<(Node, List<InputPort>, List<OutputPort>) -> Unit>()
+    private val nodeAddedListener = mutableListOf<(Node, List<InputPort>, List<OutputPort>, NodeContent) -> Unit>()
     private val edgeAddedListener = mutableListOf<(Edge) -> Unit>()
     private val nodeChangedListener = mutableMapOf<UUID, NodeListener>()
     private val edgeChangedListener = mutableMapOf<UUID, (Edge) -> Unit>()
@@ -15,7 +15,7 @@ class Graph {
         require(nodeChangedListener.put(nodeId, nodeListener) == null)
     }
 
-    fun subscribeNodeAdded(listener: (Node, List<InputPort>, List<OutputPort>) -> Unit) {
+    fun subscribeNodeAdded(listener: (Node, List<InputPort>, List<OutputPort>, NodeContent) -> Unit) {
         nodeAddedListener.add(listener)
     }
 
@@ -27,6 +27,7 @@ class Graph {
         val snapshot = current
         val nodes = snapshot.nodes.toMutableMap()
         val edges = snapshot.edges.toMutableMap()
+        val nodeContent = snapshot.nodeIdToContent.toMutableMap()
         val nodeToInputPortId = snapshot.nodeToInputPortId.toMutableMap()
         val nodeToOutputPortId = snapshot.nodeToOutputPortId.toMutableMap()
         val inputPortIdToPort = snapshot.inputPortIdToPort.toMutableMap()
@@ -47,6 +48,9 @@ class Graph {
                     val node = Node(uuid, change.name, change.position)
                     nodes[uuid] = node
 
+                    val content = change.content
+                    nodeContent[uuid] = content
+
                     val inputPorts = change.inputPorts.map { InputPort(it, UUID.randomUUID()) }
                     nodeToInputPortId[uuid] = inputPorts.map { it.id }
                     for (inputPort in inputPorts) {
@@ -60,10 +64,14 @@ class Graph {
                     }
 
                     for (listener in nodeAddedListener) {
-                        listener(node, inputPorts, outputPorts)
+                        listener(node, inputPorts, outputPorts, content)
                     }
                 }
-                is ReplaceContent -> TODO()
+                is ReplaceContent -> {
+                    val nodeId = change.nodeId
+                    nodeContent[nodeId] = change.newContent
+                    nodeChangedListener[nodeId]?.onChanged()
+                }
                 is UpdateNode -> {
                     val newNode = change.newNode
                     val newNodeId = newNode.id
@@ -73,7 +81,7 @@ class Graph {
             }
         }
 
-        current = GraphSnapshot(nodes, edges, snapshot.nodeIdToContent,
+        current = GraphSnapshot(nodes, edges, nodeContent,
             nodeToInputPortId, nodeToOutputPortId, inputPortIdToPort, outputPortIdToPort)
     }
 }
@@ -91,7 +99,15 @@ class Edge(val id: UUID, val fromNode: UUID, val toNode: UUID, val fromPort: UUI
 
 sealed class NodeContent
 
-sealed class EntranceContent : NodeContent()
+data object InputElement : NodeContent()
 
-sealed class ExitContent : NodeContent()
+data object FindUsages : NodeContent()
+
+data object ElementToSnippetConverter : NodeContent()
+
+data class AITransformer(val prompt: String) : NodeContent()
+
+data object DiffMaker : NodeContent()
+
+data object DiffApplier : NodeContent()
 

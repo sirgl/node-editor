@@ -4,6 +4,7 @@ import androidx.compose.runtime.MutableState
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.ui.geometry.Offset
 import newImpl.model.Graph
+import newImpl.model.NodeContent
 import newImpl.model.NodeListener
 import java.util.*
 
@@ -15,6 +16,7 @@ class NodeVM(
 ) {
     private val offset = Cached(Offset.Zero) { graph.current.getNode(nodeId).offset }
     private val name = Cached("") { graph.current.getNode(nodeId).name }
+    private val content = Cached(null) { graph.current.getContent(nodeId) }
     private val id = Cached(
         UUID.nameUUIDFromBytes(byteArrayOf(0, 0, 0, 0, 0, 0, 0, 0))
     ) { graph.current.getNode(nodeId).id }
@@ -31,15 +33,17 @@ class NodeVM(
         return id.value
     }
 
-    fun dragStartedAtPoint() {
-
+    fun getContent() : NodeContent {
+        return content.value!!
     }
+
 
     init {
         // TODO remove listener on disposal
         graph.subscribe(nodeId, object : NodeListener {
             override fun onChanged() {
-                dropCaches(offset, name, id)
+                dropCaches(offset, name, id, content)
+                println("Changed")
             }
         })
     }

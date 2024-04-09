@@ -62,4 +62,8 @@ class GraphSnapshot(
     fun getInputCount(nodeId: UUID): Int {
         return nodeToInputPortId[nodeId]!!.size
     }
+
+    fun getContent(nodeId: UUID): NodeContent {
+        return nodeIdToContent[nodeId]!!
+    }
 }

@@ -1,12 +1,11 @@
 package newImpl.model.execution
 
-import newImpl.model.EntranceContent
 import newImpl.model.GraphSnapshot
 
 class Executor {
     suspend fun execute(graphSnapshot: GraphSnapshot) {
         // TODO find input
-        val (node, content) = graphSnapshot.findNode { node, content -> content is EntranceContent }!!
+//        val (node, content) = graphSnapshot.findNode { node, content -> content is EntranceContent }!!
         // TODO traverse the graph and on each iteration try to push value
 
 

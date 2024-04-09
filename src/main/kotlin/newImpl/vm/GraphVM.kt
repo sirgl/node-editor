@@ -37,7 +37,7 @@ class GraphVM(val graph: Graph) {
     val cursorPosition = mutableStateOf(Offset.Zero)
 
     init {
-        graph.subscribeNodeAdded { node, inputs, outputs ->
+        graph.subscribeNodeAdded { node, inputs, outputs, content ->
             val nodeVM = NodeVM(
                 node.id, graph, inputs.map { InputPortVM(it.name, it.id, node.id) }, outputs.map { OutputPortVM(it.name, it.id, node.id) })
             nodes.value += nodeVM

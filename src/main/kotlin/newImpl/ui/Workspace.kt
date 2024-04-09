@@ -17,10 +17,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.window.Window
 import androidx.compose.ui.window.application
-import newImpl.model.AddEdge
-import newImpl.model.AddNode
-import newImpl.model.Change
-import newImpl.model.Graph
+import newImpl.model.*
 import newImpl.vm.GraphVM
 import kotlin.math.abs
 
@@ -41,14 +38,75 @@ fun Workspace(vm: GraphVM, applyChanges: (changes: List<Change>) -> Unit) {
             ContextMenuArea(items = {
                 listOf(
                     ContextMenuItem(
-                        label = "Create new node",
+                        label = "AI transformer",
                         onClick = {
-                            val nodeName = vm.graph.current.suggestNewNodeName("Node")
+                            val nodeName = vm.graph.current.suggestNewNodeName("AI transformer")
                             applyChanges(listOf(AddNode(
                                 name = nodeName,
                                 position = vm.cursorPosition.value,
-                                inputPorts = listOf("Input 1"),
-                                outputPorts = listOf("Output 1", "Output 2", "Output 3")
+                                inputPorts = listOf("Text"),
+                                outputPorts = listOf("Output"),
+                                content = AITransformer("My prompt")
+                            )))
+                        }),
+                    ContextMenuItem(
+                        label = "Input PSI element",
+                        onClick = {
+                            val nodeName = vm.graph.current.suggestNewNodeName("Input PSI element")
+                            applyChanges(listOf(AddNode(
+                                name = nodeName,
+                                position = vm.cursorPosition.value,
+                                inputPorts = listOf(),
+                                outputPorts = listOf("File", "PSI element"),
+                                content = InputElement
+                            )))
+                        }),
+                    ContextMenuItem(
+                        label = "Find usages",
+                        onClick = {
+                            val nodeName = vm.graph.current.suggestNewNodeName("Find usages")
+                            applyChanges(listOf(AddNode(
+                                name = nodeName,
+                                position = vm.cursorPosition.value,
+                                inputPorts = listOf("PSI definition"),
+                                outputPorts = listOf("File", "PSI reference"),
+                                content = FindUsages
+                            )))
+                        }),
+                    ContextMenuItem(
+                        label = "Diff converter",
+                        onClick = {
+                            val nodeName = vm.graph.current.suggestNewNodeName("Diff converter")
+                            applyChanges(listOf(AddNode(
+                                name = nodeName,
+                                position = vm.cursorPosition.value,
+                                inputPorts = listOf("File", "New text"),
+                                outputPorts = listOf("Diff"),
+                                content = DiffMaker
+                            )))
+                        }),
+                    ContextMenuItem(
+                        label = "Diff applier",
+                        onClick = {
+                            val nodeName = vm.graph.current.suggestNewNodeName("Diff applier")
+                            applyChanges(listOf(AddNode(
+                                name = nodeName,
+                                position = vm.cursorPosition.value,
+                                inputPorts = listOf("Diff"),
+                                outputPorts = listOf(),
+                                content = DiffApplier
+                            )))
+                        }),
+                    ContextMenuItem(
+                        label = "Element to snippet converter",
+                        onClick = {
+                            val nodeName = vm.graph.current.suggestNewNodeName("Element to snippet converter")
+                            applyChanges(listOf(AddNode(
+                                name = nodeName,
+                                position = vm.cursorPosition.value,
+                                inputPorts = listOf("File", "PSI element"),
+                                outputPorts = listOf("Snippet"),
+                                content = ElementToSnippetConverter
                             )))
                         })
                 )
@@ -94,7 +152,6 @@ private fun Edges(vm: GraphVM) {
         paint.strokeWidth = 5f
         paint.color = Color.Black
         paint.style = PaintingStyle.Stroke
-        val path = org.jetbrains.skia.Path()
         for (edgeVM in vm.edges.value) {
             val start = edgeVM.getStart(this@Canvas)
             val startX = start.x
@@ -103,7 +160,7 @@ private fun Edges(vm: GraphVM) {
             val endX = end.x
             val endY = end.y
 
-// Calculate control points for the Bezier curve.
+            // Calculate control points for the Bezier curve.
             val controlPoint1X = startX + (endX - startX) / 3
             val controlPoint1Y = startY
             val controlPoint2X = startX + 2 * (endX - startX) / 3
@@ -146,19 +203,6 @@ class DragModelImpl(private val onDragEnd: (inputPortId: PortId) -> Unit) : Drag
 fun main() {
     val graph = Graph()
     val vm = GraphVM(graph)
-    graph.update(listOf(AddNode("Node", Offset(100f, 200f), listOf("Input 1", "Input 2"), listOf("Output 1"))))
-    graph.update(listOf(AddNode("Node1", Offset(400f, 600f), listOf("Input 1"), listOf("Output 1", "Output 2"))))
-    val nodeIds = graph.current.nodes.keys.toList()
-    val firstNode = nodeIds[0]
-    val secondNode = nodeIds[1]
-    val firstNodeOutputPorts = graph.current.getOutputPorts(firstNode)
-    val inputPorts = graph.current.getInputPorts(secondNode)
-    graph.update(listOf(AddEdge(
-        fromNode = firstNode,
-        fromPort = firstNodeOutputPorts.first().id,
-        toNode = secondNode,
-        toPort = inputPorts.first().id
-    )))
     application {
         println("App recreated")
         Window(onCloseRequest = ::exitApplication) {

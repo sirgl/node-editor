@@ -6,9 +6,11 @@ import androidx.compose.foundation.gestures.detectDragGestures
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material.Button
 import androidx.compose.material.Divider
 import androidx.compose.material.Text
-import androidx.compose.runtime.Composable
+import androidx.compose.material.TextField
+import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -19,7 +21,9 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import newImpl.model.AITransformer
 import newImpl.model.Change
+import newImpl.model.ReplaceContent
 import newImpl.model.UpdateNode
 import newImpl.vm.GraphVM
 import newImpl.vm.InputPortVM
@@ -57,6 +61,18 @@ fun Node(isDebug: Boolean, vm: NodeVM, graphVM: GraphVM, applyChanges: (changes:
                 Divider()
                 for (output in vm.outputs) {
                     OutputPort(output, dragModel)
+                }
+                Divider()
+                val content = vm.getContent()
+                if (content is AITransformer) {
+                    // TODO here should be just a link to edit
+                    var prompt by remember { mutableStateOf(content.prompt) }
+                    TextField(value = prompt, { prompt = it })
+                    Button(onClick = {
+                        applyChanges(listOf(ReplaceContent(vm.nodeId, AITransformer(prompt))))
+                    }) {
+                        Text("Save")
+                    }
                 }
             }
         }
